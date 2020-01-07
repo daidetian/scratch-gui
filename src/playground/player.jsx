@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
+import {compose} from 'redux';
 
 import Box from '../components/box/box.jsx';
 import GUI from '../containers/gui.jsx';
@@ -19,13 +20,10 @@ if (process.env.NODE_ENV === 'production' && typeof window === 'object') {
 import styles from './player.css';
 
 const Player = ({isPlayerOnly, onSeeInside, projectId}) => (
-    <Box
-        className={classNames({
-            [styles.stageOnly]: isPlayerOnly
-        })}
-    >
+    <Box className={classNames(isPlayerOnly ? styles.stageOnly : styles.editor)}>
         {isPlayerOnly && <button onClick={onSeeInside}>{'See inside'}</button>}
         <GUI
+            canEditTitle
             enableCommunity
             isPlayerOnly={isPlayerOnly}
             projectId={projectId}
@@ -47,8 +45,18 @@ const mapDispatchToProps = dispatch => ({
     onSeeInside: () => dispatch(setPlayer(false))
 });
 
-const ConnectedPlayer = connect(mapStateToProps, mapDispatchToProps)(Player);
-const WrappedPlayer = HashParserHOC(AppStateHOC(ConnectedPlayer));
+const ConnectedPlayer = connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Player);
+
+// note that redux's 'compose' function is just being used as a general utility to make
+// the hierarchy of HOC constructor calls clearer here; it has nothing to do with redux's
+// ability to compose reducers.
+const WrappedPlayer = compose(
+    AppStateHOC,
+    HashParserHOC
+)(ConnectedPlayer);
 
 const appTarget = document.createElement('div');
 document.body.appendChild(appTarget);
